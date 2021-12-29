@@ -20,8 +20,10 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  this.width = width;
+  this.height = height;
+  this.getArea = () => this.width * this.height;
 }
 
 
@@ -35,8 +37,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 
@@ -51,8 +53,8 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  return Object.assign(Object.create(proto), JSON.parse(json));
 }
 
 
@@ -110,36 +112,88 @@ function fromJSON(/* proto, json */) {
  *  For more examples see unit tests.
  */
 
+class CssState {
+  constructor() {
+    this.state = '';
+  }
+
+  element(value) {
+    this.state += value;
+    return this;
+  }
+
+  stringify() {
+    const res = this.state;
+    this.state = '';
+    return res;
+  }
+
+  id(value) {
+    this.state += `#${value}`;
+    return this;
+  }
+
+  class(value) {
+    this.state += `.${value}`;
+    return this;
+  }
+
+  attr(value) {
+    this.state += `[${value}]`;
+    return this;
+  }
+
+  pseudoClass(value) {
+    this.state += `:${value}`;
+    return this;
+  }
+
+  pseudoElement(value) {
+    this.state += `::${value}`;
+    return this;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.state = ''.concat(selector1.state, ` ${combinator} `, selector2.state);
+    return this;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new CssState().element(value);
+  },
+  stringify() {
+    return new CssState().stringify();
+  },
+  id(value) {
+    return new CssState().id(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new CssState().class(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new CssState().attr(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new CssState().pseudoClass(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new CssState().pseudoElement(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return new CssState().combine(selector1, combinator, selector2);
   },
 };
 
+
+CssState.prototype = cssSelectorBuilder;
+CssState.prototype.constructor = CssState;
 
 module.exports = {
   Rectangle,
