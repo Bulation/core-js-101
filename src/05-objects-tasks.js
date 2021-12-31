@@ -115,9 +115,27 @@ function fromJSON(proto, json) {
 class CssState {
   constructor() {
     this.state = '';
+    this.elementCount = 0;
+    this.pseudoCount = 0;
+    this.idCount = 0;
+    this.hasElement = false;
+    this.hasId = false;
+    this.hasClass = false;
+    this.hasAttr = false;
+    this.hasPseudoClass = false;
+    this.hasPseudoElement = false;
   }
 
   element(value) {
+    if (this.elementCount) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+    if (this.hasId || this.hasClass || this.hasAttr
+      || this.hasPseudoClass || this.hasPseudoElement) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    this.elementCount += 1;
+    this.hasElement = true;
     this.state += value;
     return this;
   }
@@ -129,26 +147,51 @@ class CssState {
   }
 
   id(value) {
+    if (this.idCount) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+    if (this.hasClass || this.hasAttr || this.hasPseudoClass || this.hasPseudoElement) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    this.idCount += 1;
+    this.hasId = true;
     this.state += `#${value}`;
     return this;
   }
 
   class(value) {
+    if (this.hasAttr || this.hasPseudoClass || this.hasPseudoElement) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
     this.state += `.${value}`;
+    this.hasClass = true;
     return this;
   }
 
   attr(value) {
+    if (this.hasPseudoClass || this.hasPseudoElement) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
     this.state += `[${value}]`;
+    this.hasAttr = true;
     return this;
   }
 
   pseudoClass(value) {
+    if (this.hasPseudoElement) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
     this.state += `:${value}`;
+    this.hasPseudoClass = true;
     return this;
   }
 
   pseudoElement(value) {
+    if (this.pseudoCount) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+    this.pseudoCount += 1;
+    this.hasPseudoElement = true;
     this.state += `::${value}`;
     return this;
   }
